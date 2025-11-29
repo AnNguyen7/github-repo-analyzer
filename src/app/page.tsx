@@ -24,6 +24,12 @@ interface RepoData {
     language: string | null;
   };
   keyFilesContent: Record<string, string>;
+  missingFiles: {
+    readme: boolean;
+    gitignore: boolean;
+    license: boolean;
+    contributing: boolean;
+  };
 }
 
 interface GeneratedFile {
@@ -65,16 +71,27 @@ export default function Home() {
             const toolName = invocation.toolName;
 
             if (toolName === 'fetchRepo' && result.success) {
+              // Set repo data
               setRepoData({
                 owner: result.owner,
                 repo: result.repo,
                 files: result.files,
                 metadata: result.metadata,
                 keyFilesContent: result.keyFilesContent,
+                missingFiles: result.missingFiles,
               });
+
+              // Set analysis scores (now included in fetchRepo response)
+              if (result.scores) {
+                setScores(result.scores);
+                setIssues(result.issues || []);
+                setRecommendations(result.recommendations || []);
+                setAnalysisComplete(true);
+              }
             }
 
             if (toolName === 'analyzeStructure' && result.success) {
+              // Keep this for backwards compatibility if needed
               setScores(result.scores);
               setIssues(result.issues);
               setRecommendations(result.recommendations);
@@ -229,10 +246,10 @@ export default function Home() {
               {isLoading ? (
                 <>
                   <div className="spinner" />
-                  <span>Fetching</span>
+                  <span>Analyzing...</span>
                 </>
               ) : (
-                <span>Fetch Repo</span>
+                <span>Analyze Repository</span>
               )}
             </button>
           </div>
@@ -287,9 +304,9 @@ export default function Home() {
                 />
               </div>
               <div className="text-center">
-                <p style={{ color: 'var(--text-primary)' }}>Fetching repository...</p>
+                <p style={{ color: 'var(--text-primary)' }}>Analyzing repository...</p>
                 <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Getting structure and metadata from GitHub
+                  Fetching structure, analyzing code, and calculating health scores
                 </p>
               </div>
             </div>
@@ -353,7 +370,7 @@ export default function Home() {
                   onClick={async () => {
                     await append({
                       role: 'user',
-                      content: CONTINUE_ANALYSIS_PROMPT,
+                      content: CONTINUE_ANALYSIS_PROMPT(repoData),
                     });
                   }}
                   className="btn-primary w-full"
