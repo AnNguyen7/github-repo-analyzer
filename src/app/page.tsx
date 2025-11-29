@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useChat } from 'ai/react';
+import { 
+  FETCH_REPO_PROMPT, 
+  CONTINUE_ANALYSIS_PROMPT, 
+  GENERATE_FILES_PROMPT 
+} from '@/lib/prompts';
 
 interface AnalysisScores {
   overall: number;
@@ -112,32 +117,16 @@ export default function Home() {
 
     await append({
       role: 'user',
-      content: `Analyze this GitHub repository: ${repoUrl}
-
-Please do the following:
-1. First, use fetchRepo to get the repository structure
-2. Then, use analyzeStructure to evaluate it and provide health scores
-3. Report the overall score, documentation score, structure score, issues, and recommendations`,
+      content: FETCH_REPO_PROMPT(repoUrl),
     });
   };
 
   const handleExecuteActions = async () => {
     if (!repoData || selectedActions.length === 0) return;
 
-    const actionPrompts = selectedActions.map((action) => {
-      switch (action) {
-        case 'readme': return 'Generate a comprehensive README.md file.';
-        case 'gitignore': return 'Generate an appropriate .gitignore file.';
-        case 'license': return 'Generate an MIT LICENSE file.';
-        case 'contributing': return 'Generate a CONTRIBUTING.md file.';
-        case 'api-docs': return 'Generate API documentation.';
-        default: return '';
-      }
-    }).filter(Boolean);
-
     await append({
       role: 'user',
-      content: `Based on the repository analysis, please perform these actions:\n${actionPrompts.join('\n')}`,
+      content: GENERATE_FILES_PROMPT(selectedActions),
     });
   };
 
@@ -240,10 +229,10 @@ Please do the following:
               {isLoading ? (
                 <>
                   <div className="spinner" />
-                  <span>Scanning</span>
+                  <span>Fetching</span>
                 </>
               ) : (
-                <span>Analyze</span>
+                <span>Fetch Repo</span>
               )}
             </button>
           </div>
@@ -298,9 +287,9 @@ Please do the following:
                 />
               </div>
               <div className="text-center">
-                <p style={{ color: 'var(--text-primary)' }}>Scanning repository...</p>
+                <p style={{ color: 'var(--text-primary)' }}>Fetching repository...</p>
                 <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Analyzing structure and documentation
+                  Getting structure and metadata from GitHub
                 </p>
               </div>
             </div>
@@ -356,6 +345,26 @@ Please do the following:
                 <span className="text-sm">{Object.keys(repoData.keyFilesContent).length} key files</span>
               </div>
             </div>
+
+            {/* Continue Analysis Button - shows if repo loaded but analysis didn't complete */}
+            {!scores && !isLoading && (
+              <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                <button
+                  onClick={async () => {
+                    await append({
+                      role: 'user',
+                      content: CONTINUE_ANALYSIS_PROMPT,
+                    });
+                  }}
+                  className="btn-primary w-full"
+                >
+                  Continue Analysis →
+                </button>
+                <p className="text-xs text-center mt-2" style={{ color: 'var(--text-muted)' }}>
+                  Analysis incomplete. Click to calculate health scores.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

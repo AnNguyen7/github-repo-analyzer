@@ -98,3 +98,33 @@ For each function/class/endpoint found:
 5. Example usage
 
 Format as clean markdown with proper code blocks.`;
+
+// ============================================
+// UI Prompts - Used in the frontend
+// ============================================
+
+export const FETCH_REPO_PROMPT = (repoUrl: string) => `Analyze this GitHub repository: ${repoUrl}
+
+IMPORTANT: You MUST complete ALL steps in order:
+1. Use fetchRepo to get the repository structure
+2. Use analyzeStructure to evaluate it and calculate health scores
+3. Return the scores, issues, and recommendations
+
+Do NOT stop after fetchRepo - you MUST also call analyzeStructure.`;
+
+export const CONTINUE_ANALYSIS_PROMPT = `Now use analyzeStructure to evaluate the repository and provide health scores, issues, and recommendations.`;
+
+export const GENERATE_FILES_PROMPT = (actions: string[]) => {
+  const actionPrompts = actions.map((action) => {
+    switch (action) {
+      case 'readme': return 'Generate a comprehensive README.md file.';
+      case 'gitignore': return 'Generate an appropriate .gitignore file.';
+      case 'license': return 'Generate an MIT LICENSE file.';
+      case 'contributing': return 'Generate a CONTRIBUTING.md file.';
+      case 'api-docs': return 'Generate API documentation.';
+      default: return '';
+    }
+  }).filter(Boolean);
+
+  return `Based on the repository analysis, please perform these actions:\n${actionPrompts.join('\n')}`;
+};
