@@ -1,4 +1,4 @@
-# 🔍 GitHub Repository Analyzer & Optimizer Agent
+# GitHub Repository Analyzer & Optimizer Agent
 
 An AI-powered agent that analyzes GitHub repositories, evaluates their health, and automatically generates missing documentation files.
 
@@ -9,32 +9,32 @@ An AI-powered agent that analyzes GitHub repositories, evaluates their health, a
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-## 🎯 Overview
+## Overview
 
 This project implements an **AI Agent** following Dr. Sun's agent framework:
 
 | Component | Implementation |
 |-----------|----------------|
-| **🧠 LLM (Brain)** | Google Gemini 2.5 Flash — decides which actions to take |
-| **🔧 Tools (Actors)** | 8 specialized tools that execute real operations |
-| **🔗 Orchestrator** | Vercel AI SDK — connects LLM decisions to tool execution |
+| **LLM (Brain)** | Google Gemini 2.5 Flash — decides which actions to take |
+| **Tools (Actors)** | 8 specialized tools that execute real operations |
+| **Orchestrator** | Vercel AI SDK — connects LLM decisions to tool execution |
 
 The agent autonomously analyzes any public GitHub repository, identifies issues, and generates professional documentation to improve repository health.
 
-## ✨ Features
+## Features
 
 - **Repository Health Scoring** — Overall score (0-100) with Documentation & Structure breakdown
 - **Issue Detection** — Identifies missing LICENSE, README, CONTRIBUTING, tests, etc.
 - **Smart File Generation** — AI-powered creation of:
-  - 📄 README.md
-  - 📋 .gitignore
-  - ⚖️ LICENSE (MIT, Apache 2.0, GPL 3.0)
-  - 🤝 CONTRIBUTING.md
-  - 📚 API Documentation
+  - README.md
+  - .gitignore
+  - LICENSE (MIT, Apache 2.0, GPL 3.0)
+  - CONTRIBUTING.md
+  - API Documentation
 - **One-Click Download** — Download individual files or all as ZIP
-- **Beautiful UI** — Modern glassmorphism design with smooth animations
+- **Beautiful UI** — Modern dark theme with smooth animations
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technology |
 |----------|------------|
@@ -45,7 +45,7 @@ The agent autonomously analyzes any public GitHub repository, identifies issues,
 | GitHub API | Octokit REST |
 | Font | Outfit (Google Fonts) |
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
@@ -81,7 +81,7 @@ npm run dev
 
 4. **Open http://localhost:3000** and analyze any GitHub repo!
 
-## 🤖 Agent Tools
+## Agent Tools
 
 The agent has 8 specialized tools at its disposal:
 
@@ -96,7 +96,7 @@ The agent has 8 specialized tools at its disposal:
 | \`generateApiDocs\` | Documents functions, classes, and API endpoints |
 | \`createGithubIssues\` | Suggests GitHub issues for identified improvements |
 
-## 📁 Project Structure
+## Project Structure
 
 \`\`\`
 github-repo-analyzer/
@@ -126,33 +126,33 @@ github-repo-analyzer/
 └── README.md
 \`\`\`
 
-## 📸 Screenshots
+## Screenshots
 
 <p align="center">
   <img src="docs/screenshot.png" alt="GitHub Repo Analyzer Screenshot" width="800">
 </p>
 
-## 🧪 Example Usage
+## Example Usage
 
-1. Enter a GitHub repository URL: \`facebook/react\`
+1. Enter a GitHub repository URL: `facebook/react`
 2. Click **Analyze**
 3. View the health score, issues found, and recommendations
-4. Click on recommendations to generate missing files
-5. Download generated files individually or as ZIP
+4. Select files to generate (README, LICENSE, etc.)
+5. Click **Generate** and download files individually or as ZIP
 
-## 🔑 API Keys
+## API Keys
 
 | Key | Required | Purpose |
 |-----|----------|---------|
 | \`GOOGLE_GENERATIVE_AI_API_KEY\` | ✅ Yes | Powers the AI agent (Gemini 2.5 Flash) |
 | \`GITHUB_TOKEN\` | ❌ Optional | Access private repos & higher rate limits |
 
-## 📄 License
+## License
 
 MIT © An Nguyen
 
 ---
 
 <p align="center">
-  Built with ❤️ for CS 4680 Prompt Engineering
+  Built for CS 4680 Prompt Engineering
 </p>
