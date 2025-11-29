@@ -44,25 +44,34 @@ export async function generateApiDocsExecute({
 
   const prompt = API_DOCS_PROMPT.replace('{codeFiles}', codeContents.join('\n'));
 
-  try {
-    const { text } = await generateText({
-      model: google('gemini-2.5-flash'),
-      prompt,
-    });
+  // Retry logic for reliability
+  const maxRetries = 2;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { text } = await generateText({
+        model: google('gemini-2.5-flash'),
+        prompt,
+      });
 
-    return {
-      success: true,
-      fileName: 'API_DOCS.md',
-      content: text,
-      filesDocumented: codeFiles,
-    };
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate API documentation';
-    return { 
-      success: false, 
-      error: errorMessage 
-    };
+      return {
+        success: true,
+        fileName: 'API_DOCS.md',
+        content: text,
+        filesDocumented: codeFiles,
+      };
+    } catch (error: unknown) {
+      console.error(`API docs generation attempt ${attempt} failed:`, error);
+      if (attempt === maxRetries) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to generate API documentation';
+        return { 
+          success: false, 
+          error: errorMessage 
+        };
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
   }
+  return { success: false, error: 'Max retries exceeded' };
 }
 
 export const generateApiDocsDescription = 'Generate API documentation for code files in the repository.';

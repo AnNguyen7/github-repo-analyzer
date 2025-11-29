@@ -42,24 +42,34 @@ export async function generateReadmeExecute({
     .replace('{fileTree}', fileTree)
     .replace('{keyFilesContent}', JSON.stringify(keyFilesContent).slice(0, 2000));
 
-  try {
-    const { text } = await generateText({
-      model: google('gemini-2.5-flash'),
-      prompt,
-    });
+  // Retry logic for reliability
+  const maxRetries = 2;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { text } = await generateText({
+        model: google('gemini-2.5-flash'),
+        prompt,
+      });
 
-    return {
-      success: true,
-      fileName: 'README.md',
-      content: text,
-    };
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate README';
-    return { 
-      success: false, 
-      error: errorMessage 
-    };
+      return {
+        success: true,
+        fileName: 'README.md',
+        content: text,
+      };
+    } catch (error: unknown) {
+      console.error(`README generation attempt ${attempt} failed:`, error);
+      if (attempt === maxRetries) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to generate README';
+        return { 
+          success: false, 
+          error: errorMessage 
+        };
+      }
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
   }
+  return { success: false, error: 'Max retries exceeded' };
 }
 
 export const generateReadmeDescription = 'Generate a comprehensive README.md file for the repository based on its structure and content.';

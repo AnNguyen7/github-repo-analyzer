@@ -3,7 +3,7 @@ import { streamText } from 'ai';
 import { tools } from '@/lib/agent';
 import { SYSTEM_PROMPT } from '@/lib/prompts';
 
-export const maxDuration = 60; // Allow longer execution for Vercel
+export const maxDuration = 120; // Allow longer execution for multiple tool calls
 
 export async function POST(req: Request) {
   try {
@@ -14,7 +14,8 @@ export async function POST(req: Request) {
       system: SYSTEM_PROMPT,
       messages,
       tools,
-      maxToolRoundtrips: 10,
+      maxToolRoundtrips: 5, // Reduced to prevent timeout
+      toolChoice: 'auto',
     });
 
     return result.toDataStreamResponse();

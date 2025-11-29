@@ -36,6 +36,7 @@ export default function Home() {
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
   const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
   const [repoData, setRepoData] = useState<RepoData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -43,6 +44,10 @@ export default function Home() {
 
   const { messages, append, isLoading, setMessages } = useChat({
     api: '/api/analyze',
+    onError: (err) => {
+      console.error('Chat error:', err);
+      setError(err.message || 'An error occurred. Please try again.');
+    },
   });
 
   // Extract tool results from messages
@@ -95,6 +100,7 @@ export default function Home() {
 
   const handleAnalyze = async () => {
     if (!repoUrl) return;
+    setError(null);
     setAnalysisComplete(false);
     setScores(null);
     setIssues([]);
@@ -158,49 +164,74 @@ Please do the following:
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#16a34a';
-    if (score >= 60) return '#22c55e';
-    if (score >= 40) return '#4ade80';
-    return '#86efac';
+    if (score >= 80) return '#21b01c';
+    if (score >= 60) return '#1a8d17';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background effects */}
-      <div className="pattern-overlay" />
-      <div className="orb orb-1" />
-      <div className="orb orb-2" />
-      
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-12">
+    <div className="min-h-screen grid-bg">
+      <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Header */}
-        <header className={`text-center mb-12 ${mounted ? 'animate-fade-up' : 'opacity-0'}`}>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-green-200/50 mb-6">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium text-green-700">AI-Powered Analysis</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-semibold text-green-900 tracking-tight mb-3">
-            Repo Analyzer
+        <header className={`flex items-center justify-between mb-10 ${mounted ? 'animate-fade-up' : 'opacity-0'}`}>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--accent-cyan)' }}>
+            REPO.SCAN
           </h1>
-          <p className="text-green-700/70 text-lg max-w-md mx-auto">
-            Analyze, optimize, and enhance your GitHub repositories with intelligent automation
-          </p>
+          <div className="status-badge">
+            <span className="status-dot" />
+            <span>Agent Online</span>
+          </div>
         </header>
 
-        {/* Input Section */}
-        <div className={`glass-card rounded-2xl p-6 mb-8 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
-          <label className="block text-sm font-medium text-green-800 mb-2">
-            Repository URL
-          </label>
+        {/* Stats Row - Only show when we have data */}
+        {scores && (
+          <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
+            <div className="stat-card">
+              <p className="stat-label">Health Score</p>
+              <p className="stat-value" style={{ color: 'var(--accent-cyan)' }}>{scores.overall}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Documentation</p>
+              <p className="stat-value">{scores.documentation}%</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Structure</p>
+              <p className="stat-value">{scores.structure}%</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Issues Found</p>
+              <p className="stat-value" style={{ color: issues.length > 0 ? 'var(--status-warning)' : 'var(--accent-cyan)' }}>
+                {issues.length}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Search Input */}
+        <div className={`dark-card rounded-xl p-5 mb-6 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
           <div className="flex gap-3">
-            <input
-              type="text"
-              value={repoUrl}
-              onChange={(e) => setRepoUrl(e.target.value)}
-              placeholder="https://github.com/owner/repository"
-              className="input-field flex-1"
-              disabled={isLoading}
-              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-            />
+            <div className="relative flex-1">
+              <svg 
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" 
+                style={{ color: 'var(--text-muted)' }}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder="Enter repository URL or owner/repo..."
+                className="input-field with-icon w-full"
+                style={{ paddingLeft: '2.75rem' }}
+                disabled={isLoading}
+                onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+              />
+            </div>
             <button
               onClick={handleAnalyze}
               disabled={isLoading || !repoUrl}
@@ -208,171 +239,231 @@ Please do the following:
             >
               {isLoading ? (
                 <>
-                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Analyzing
+                  <div className="spinner" />
+                  <span>Scanning</span>
                 </>
               ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Analyze
-                </>
+                <span>Analyze</span>
               )}
             </button>
           </div>
           {analysisComplete && (
-            <button onClick={resetAnalysis} className="mt-4 text-sm text-green-600 hover:text-green-800 transition-colors">
-              ← Analyze another repository
+            <button 
+              onClick={resetAnalysis} 
+              className="mt-3 text-sm transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+              onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+              onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+            >
+              ← New analysis
             </button>
           )}
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div 
+            className="dark-card rounded-xl p-4 mb-6 animate-scale-in"
+            style={{ borderColor: '#ef4444', background: 'rgba(239, 68, 68, 0.1)' }}
+          >
+            <div className="flex items-center gap-3">
+              <span style={{ color: '#ef4444' }}>⚠️</span>
+              <div>
+                <p style={{ color: '#ef4444' }} className="font-medium">Error</p>
+                <p style={{ color: 'var(--text-secondary)' }} className="text-sm">{error}</p>
+              </div>
+              <button 
+                onClick={() => setError(null)} 
+                className="ml-auto"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {isLoading && !analysisComplete && (
-          <div className="glass-card rounded-2xl p-8 mb-8 animate-scale-in">
+          <div className="dark-card rounded-xl p-10 mb-6 animate-scale-in">
             <div className="flex flex-col items-center gap-4">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full border-4 border-green-200" />
-                <div className="absolute inset-0 rounded-full border-4 border-green-500 border-t-transparent animate-spin" />
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full" style={{ border: '2px solid var(--border-subtle)' }} />
+                <div 
+                  className="absolute inset-0 w-16 h-16 rounded-full animate-spin"
+                  style={{ 
+                    border: '2px solid transparent',
+                    borderTopColor: 'var(--accent-cyan)',
+                  }} 
+                />
               </div>
               <div className="text-center">
-                <p className="text-green-800 font-medium">Analyzing repository...</p>
-                <p className="text-green-600/60 text-sm mt-1">This may take a few moments</p>
+                <p style={{ color: 'var(--text-primary)' }}>Scanning repository...</p>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Analyzing structure and documentation
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Repository Info */}
+        {/* Repository Info Card */}
         {repoData && (
-          <div className={`glass-card rounded-2xl p-6 mb-6 ${mounted ? 'animate-fade-up delay-200' : 'opacity-0'}`}>
+          <div className={`dark-card rounded-xl p-5 mb-6 ${mounted ? 'animate-fade-up delay-200' : 'opacity-0'}`}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-semibold text-green-900">{repoData.metadata.name}</h2>
-                <p className="text-green-700/70 mt-1">{repoData.metadata.description || 'No description'}</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <svg className="w-6 h-6" style={{ color: 'var(--accent-cyan)' }} fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" clipRule="evenodd" />
+                  </svg>
+                  <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {repoData.metadata.name}
+                  </h2>
+                </div>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  {repoData.metadata.description || 'No description available'}
+                </p>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+              <span 
+                className="px-3 py-1.5 rounded-md text-xs font-mono"
+                style={{ 
+                  background: 'var(--bg-elevated)', 
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-subtle)'
+                }}
+              >
                 {repoData.owner}/{repoData.repo}
               </span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-green-100">
-              <div className="text-center">
-                <span className="text-lg">💻</span>
-                <p className="text-xl font-semibold text-green-900 mt-1">{repoData.metadata.language || '—'}</p>
-                <p className="text-xs text-green-600/60">Language</p>
+
+            <div className="flex gap-6 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ background: 'var(--accent-cyan)' }} />
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {repoData.metadata.language || 'Unknown'}
+                </span>
               </div>
-              <div className="text-center">
-                <span className="text-lg">📁</span>
-                <p className="text-xl font-semibold text-green-900 mt-1">{repoData.files.length}</p>
-                <p className="text-xs text-green-600/60">Files</p>
+              <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <span className="text-sm">{repoData.files.length} files</span>
               </div>
-              <div className="text-center">
-                <span className="text-lg">📄</span>
-                <p className="text-xl font-semibold text-green-900 mt-1">{Object.keys(repoData.keyFilesContent).length}</p>
-                <p className="text-xs text-green-600/60">Key Files</p>
+              <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="text-sm">{Object.keys(repoData.keyFilesContent).length} key files</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Health Score */}
+        {/* Health Score Card */}
         {scores && (
-          <div className={`glass-card rounded-2xl p-6 mb-6 ${mounted ? 'animate-fade-up delay-300' : 'opacity-0'}`}>
+          <div className={`dark-card rounded-xl p-5 mb-6 ${mounted ? 'animate-fade-up delay-300' : 'opacity-0'}`}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-green-900">Repository Health</h3>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Repository Health
+              </h3>
               <div className="relative w-20 h-20">
                 <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="#dcfce7" strokeWidth="8" />
+                  <circle 
+                    cx="50" cy="50" r="42" 
+                    fill="none" 
+                    stroke="var(--bg-elevated)" 
+                    strokeWidth="6" 
+                  />
                   <circle
-                    cx="50" cy="50" r="45"
+                    cx="50" cy="50" r="42"
                     fill="none"
                     stroke={getScoreColor(scores.overall)}
-                    strokeWidth="8"
+                    strokeWidth="6"
                     strokeLinecap="round"
-                    strokeDasharray={`${(scores.overall / 100) * 283} 283`}
+                    strokeDasharray={`${(scores.overall / 100) * 264} 264`}
                     className="score-ring"
+                    style={{ filter: `drop-shadow(0 0 6px ${getScoreColor(scores.overall)})` }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold text-green-900">{scores.overall}</span>
+                  <span className="text-xl font-bold" style={{ color: getScoreColor(scores.overall) }}>
+                    {scores.overall}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white/50 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-green-700">Documentation</span>
-                  <span className="text-lg font-semibold text-green-900">{scores.documentation}%</span>
+              <div className="p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Documentation</span>
+                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{scores.documentation}%</span>
                 </div>
-                <div className="h-2 bg-green-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-1000" style={{ width: `${scores.documentation}%` }} />
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${scores.documentation}%` }} />
                 </div>
               </div>
-              <div className="bg-white/50 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-green-700">Structure</span>
-                  <span className="text-lg font-semibold text-green-900">{scores.structure}%</span>
+              <div className="p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Structure</span>
+                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{scores.structure}%</span>
                 </div>
-                <div className="h-2 bg-green-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-1000" style={{ width: `${scores.structure}%` }} />
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${scores.structure}%` }} />
                 </div>
               </div>
             </div>
 
             {issues.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-green-800 mb-2">Issues Found</h4>
-                <ul className="space-y-2">
+              <div className="mb-5">
+                <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
+                  ISSUES FOUND
+                </h4>
+                <div className="space-y-2">
                   {issues.map((issue, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-green-700/80">
-                      <span className="text-amber-500 mt-0.5">⚠</span>
-                      {issue}
-                    </li>
+                    <div key={i} className="issue-item">
+                      <span style={{ color: 'var(--status-warning)' }}>⚠</span>
+                      <span>{issue}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
 
             {recommendations.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-green-800 mb-2">Recommendations</h4>
-                <ul className="space-y-2">
+                <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
+                  RECOMMENDATIONS
+                </h4>
+                <div className="space-y-2">
                   {recommendations.map((rec, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-green-700/80">
-                      <span className="text-green-500 mt-0.5">→</span>
-                      {rec}
-                    </li>
+                    <div key={i} className="issue-item">
+                      <span style={{ color: 'var(--accent-cyan)' }}>→</span>
+                      <span>{rec}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Actions */}
+        {/* Generate Files Section */}
         {analysisComplete && recommendations.length > 0 && generatedFiles.length === 0 && (
-          <div className={`glass-card rounded-2xl p-6 mb-6 ${mounted ? 'animate-fade-up delay-400' : 'opacity-0'}`}>
-            <h3 className="text-xl font-semibold text-green-900 mb-4">Generate Files</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+          <div className={`dark-card rounded-xl p-5 mb-6 ${mounted ? 'animate-fade-up delay-400' : 'opacity-0'}`}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              Generate Files
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
               {[
-                { id: 'readme', label: 'README.md' },
-                { id: 'gitignore', label: '.gitignore' },
-                { id: 'license', label: 'LICENSE' },
-                { id: 'contributing', label: 'CONTRIBUTING.md' },
-                { id: 'api-docs', label: 'API Docs' },
+                { id: 'readme', label: 'README.md', icon: '📄' },
+                { id: 'license', label: 'LICENSE', icon: '⚖️' },
+                { id: 'contributing', label: 'CONTRIBUTING.md', icon: '🤝' },
+                { id: 'api-docs', label: 'API Docs', icon: '📚' },
               ].map((action) => (
                 <label
                   key={action.id}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl cursor-pointer transition-all ${
-                    selectedActions.includes(action.id)
-                      ? 'bg-green-500 text-white shadow-lg shadow-green-500/25'
-                      : 'bg-white/60 text-green-800 hover:bg-green-50'
-                  }`}
+                  className={`action-chip ${selectedActions.includes(action.id) ? 'selected' : ''}`}
                 >
                   <input
                     type="checkbox"
@@ -386,7 +477,8 @@ Please do the following:
                     }}
                     className="sr-only"
                   />
-                  <span className="text-sm font-medium">{action.label}</span>
+                  <span>{action.icon}</span>
+                  <span className="font-medium">{action.label}</span>
                 </label>
               ))}
             </div>
@@ -395,20 +487,19 @@ Please do the following:
               disabled={selectedActions.length === 0 || isLoading}
               className="btn-primary w-full"
             >
-              {isLoading ? 'Generating...' : 'Generate Selected Files'}
+              {isLoading ? 'Generating...' : `Generate ${selectedActions.length} file${selectedActions.length !== 1 ? 's' : ''}`}
             </button>
           </div>
         )}
 
         {/* Generated Files */}
         {generatedFiles.length > 0 && (
-          <div className="glass-card rounded-2xl p-6 mb-6 animate-scale-in">
+          <div className="dark-card rounded-xl p-5 mb-6 animate-scale-in">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-green-900">Generated Files</h3>
-              <button
-                onClick={downloadFiles}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
-              >
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Generated Files
+              </h3>
+              <button onClick={downloadFiles} className="btn-secondary flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
@@ -417,14 +508,22 @@ Please do the following:
             </div>
             <div className="space-y-3">
               {generatedFiles.map((file, i) => (
-                <details key={i} className="group bg-white/50 rounded-xl overflow-hidden">
-                  <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-green-50/50 transition-colors">
-                    <svg className="w-4 h-4 text-green-600 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <details key={i} className="file-item group">
+                  <summary className="file-header">
+                    <svg 
+                      className="w-4 h-4 transition-transform group-open:rotate-90" 
+                      style={{ color: 'var(--accent-cyan)' }}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="font-mono text-sm text-green-800">{file.fileName}</span>
+                    <span className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+                      {file.fileName}
+                    </span>
                   </summary>
-                  <pre className="px-4 py-3 text-xs text-green-700 bg-green-50/30 overflow-x-auto max-h-64">
+                  <pre className="file-content">
                     <code>{file.content}</code>
                   </pre>
                 </details>
@@ -434,8 +533,8 @@ Please do the following:
         )}
 
         {/* Footer */}
-        <footer className="text-center mt-12 text-sm text-green-600/60">
-          <p>CS 4680 Prompt Engineering • An Nguyen</p>
+        <footer className="text-center mt-12 text-sm" style={{ color: 'var(--text-muted)' }}>
+          <p>CS 4680 Prompt Engineering · An Nguyen</p>
         </footer>
       </main>
     </div>

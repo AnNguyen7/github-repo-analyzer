@@ -32,24 +32,33 @@ export async function generateContributingExecute({
     .replace('{hasTests}', hasTests.toString())
     .replace('{hasCI}', hasCI.toString());
 
-  try {
-    const { text } = await generateText({
-      model: google('gemini-2.5-flash'),
-      prompt,
-    });
+  // Retry logic for reliability
+  const maxRetries = 2;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { text } = await generateText({
+        model: google('gemini-2.5-flash'),
+        prompt,
+      });
 
-    return {
-      success: true,
-      fileName: 'CONTRIBUTING.md',
-      content: text,
-    };
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate CONTRIBUTING.md';
-    return { 
-      success: false, 
-      error: errorMessage 
-    };
+      return {
+        success: true,
+        fileName: 'CONTRIBUTING.md',
+        content: text,
+      };
+    } catch (error: unknown) {
+      console.error(`CONTRIBUTING generation attempt ${attempt} failed:`, error);
+      if (attempt === maxRetries) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to generate CONTRIBUTING.md';
+        return { 
+          success: false, 
+          error: errorMessage 
+        };
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
   }
+  return { success: false, error: 'Max retries exceeded' };
 }
 
 export const generateContributingDescription = 'Generate a CONTRIBUTING.md file with guidelines for contributors.';
