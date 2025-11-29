@@ -7,7 +7,7 @@ An AI agent that analyzes GitHub repositories and generates missing documentatio
 ## Overview
 
 This project implements an AI agent following Dr. Sun's framework:
-- **LLM as the brain**: GPT-4o-mini decides which actions to take
+- **LLM as the brain**: Google Gemini 1.5 Flash decides which actions to take
 - **Tools as actors**: Each tool executes real operations (fetch data, generate files)
 - **Vercel AI SDK**: Connects LLM decisions to tool execution (similar to LangChain)
 
@@ -21,9 +21,9 @@ This project implements an AI agent following Dr. Sun's framework:
 ## Tech Stack
 
 - Next.js 15 (App Router)
-- Vercel AI SDK + OpenAI GPT-4o-mini
+- Vercel AI SDK + Google Gemini 1.5 Flash
 - Tailwind CSS
-- Prisma + Neon PostgreSQL
+- Prisma + Neon PostgreSQL (optional)
 - GitHub REST API (Octokit)
 
 ## Setup
@@ -37,14 +37,13 @@ npm install
 
 2. Create \`.env.local\` with your API keys:
 \`\`\`env
-OPENAI_API_KEY=sk-...
-DATABASE_URL=postgresql://...
-GITHUB_TOKEN=ghp_...  # optional
+GOOGLE_GENERATIVE_AI_API_KEY=AIza...
+GITHUB_TOKEN=ghp_...  # optional, for private repos
+# DATABASE_URL=postgresql://...  # optional, for history feature
 \`\`\`
 
-3. Set up database and run:
+3. Run the app:
 \`\`\`bash
-npx prisma db push
 npm run dev
 \`\`\`
 

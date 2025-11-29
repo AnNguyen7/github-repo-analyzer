@@ -1,4 +1,4 @@
-import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 import { streamText } from 'ai';
 import { tools } from '@/lib/agent';
 import { SYSTEM_PROMPT } from '@/lib/prompts';
@@ -10,11 +10,11 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
+      model: google('gemini-1.5-pro'),
       system: SYSTEM_PROMPT,
       messages,
       tools,
-      maxToolRoundtrips: 10, // Allow multiple tool calls in sequence
+      maxToolRoundtrips: 10,
     });
 
     return result.toDataStreamResponse();

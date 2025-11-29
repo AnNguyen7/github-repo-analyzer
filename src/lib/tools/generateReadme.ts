@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { README_PROMPT } from '../prompts';
 
@@ -44,7 +44,7 @@ export async function generateReadmeExecute({
 
   try {
     const { text } = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: google('gemini-2.0-flash'),
       prompt,
     });
 
