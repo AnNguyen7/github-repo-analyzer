@@ -1,0 +1,56 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AnalysisSession {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  repoUrl     String
+  repoName    String
+  owner       String
+  
+  // Scores
+  overallScore       Int?
+  documentationScore Int?
+  structureScore     Int?
+  
+  // Analysis data
+  analysisJson String? // Full analysis as JSON
+  
+  // Relations
+  generatedFiles GeneratedFile[]
+  actionLogs     ActionLog[]
+}
+
+model GeneratedFile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  sessionId String
+  session   AnalysisSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  fileName String // e.g., "README.md"
+  fileType String // "readme" | "gitignore" | "license" | "contributing" | "api-docs"
+  content  String // Actual file content
+}
+
+model ActionLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  sessionId String
+  session   AnalysisSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  action    String // Tool name that was called
+  input     String // Input parameters (JSON)
+  output    String // Output result (JSON)
+  status    String // "success" | "error"
+  duration  Int?   // Execution time in ms
+}
