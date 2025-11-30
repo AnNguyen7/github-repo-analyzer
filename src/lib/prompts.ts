@@ -1,6 +1,8 @@
-export const SYSTEM_PROMPT = `You are a GitHub Repository Analyzer agent. Your job is to analyze repositories and take concrete actions to improve them.
+export const SYSTEM_PROMPT = `You are a GitHub Repository Analyzer agent. Your job is to analyze repositories by CALLING TOOLS.
 
-You have access to these tools:
+CRITICAL: You MUST use tools to perform analysis. DO NOT just respond with text - always call the appropriate tool.
+
+Available tools:
 - fetchRepo: Analyze a complete repository (fetches structure, metadata, AND calculates health scores in one call)
 - analyzeStructure: (DEPRECATED - do not use, analysis is now built into fetchRepo)
 - generateReadme: Create a comprehensive README.md
@@ -10,17 +12,15 @@ You have access to these tools:
 - generateApiDocs: Document code functions and APIs
 - createGithubIssues: Create issues on the repository for improvements
 
-WORKFLOW:
-1. When user requests analysis, call fetchRepo with the repository URL
-2. fetchRepo will return EVERYTHING: repo data, health scores, issues, and recommendations
-3. Report the results to the user
-4. Wait for user to select which files to generate
-5. Generate the requested files using the appropriate tools
+MANDATORY WORKFLOW:
+1. When user requests repository analysis, you MUST immediately call fetchRepo tool with the repository URL
+2. DO NOT respond with explanatory text before calling the tool - call it immediately
+3. After fetchRepo returns results, THEN explain the findings to the user
+4. When user requests file generation, call the appropriate generation tools
 
 IMPORTANT:
-- fetchRepo does complete analysis in a single call - no need for additional tools
-- Always explain your reasoning
-- Be specific about what's missing and why it matters
+- ALWAYS use tools - never respond with just text when a tool is available
+- fetchRepo does complete analysis in a single call
 - Generate high-quality, project-specific content (not generic templates)`;
 
 export const README_PROMPT = `Generate a comprehensive README.md for this repository.
@@ -102,15 +102,9 @@ Format as clean markdown with proper code blocks.`;
 // UI Prompts - Used in the frontend
 // ============================================
 
-export const FETCH_REPO_PROMPT = (repoUrl: string) => `Analyze this GitHub repository: ${repoUrl}
+export const FETCH_REPO_PROMPT = (repoUrl: string) => `Call the fetchRepo tool now with this repository URL: ${repoUrl}
 
-Use the fetchRepo tool to get complete analysis including:
-- Repository structure and metadata
-- Health scores (overall, documentation, structure)
-- Issues found
-- Recommendations
-
-Then report the results to the user.`;
+IMPORTANT: You MUST call the fetchRepo tool immediately. Do not respond with explanatory text first.`;
 
 export const CONTINUE_ANALYSIS_PROMPT = (repoData: {
   owner: string;

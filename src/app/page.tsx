@@ -59,6 +59,12 @@ export default function Home() {
       console.error('Chat error:', err);
       setError(err.message || 'An error occurred. Please try again.');
     },
+    onFinish: (message) => {
+      // Clear error if we got successful tool results
+      if (message.toolInvocations?.some(inv => inv.state === 'result' && inv.result?.success)) {
+        setError(null);
+      }
+    },
   });
 
   // Extract tool results from messages
