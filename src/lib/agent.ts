@@ -34,11 +34,16 @@ import {
   generateApiDocsExecute, 
   generateApiDocsDescription 
 } from './tools/generateApiDocs';
-import { 
-  createGithubIssuesParameters, 
-  createGithubIssuesExecute, 
-  createGithubIssuesDescription 
+import {
+  createGithubIssuesParameters,
+  createGithubIssuesExecute,
+  createGithubIssuesDescription
 } from './tools/createGithubIssues';
+import {
+  summarizeRepoParameters,
+  summarizeRepoExecute,
+  summarizeRepoDescription
+} from './tools/summarizeRepo';
 
 export const tools: Record<string, CoreTool> = {
   fetchRepo: {
@@ -80,6 +85,11 @@ export const tools: Record<string, CoreTool> = {
     description: createGithubIssuesDescription,
     parameters: createGithubIssuesParameters,
     execute: createGithubIssuesExecute,
+  },
+  summarizeRepo: {
+    description: summarizeRepoDescription,
+    parameters: summarizeRepoParameters,
+    execute: summarizeRepoExecute,
   },
 };
 

@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useChat } from 'ai/react';
-import { 
-  FETCH_REPO_PROMPT, 
-  CONTINUE_ANALYSIS_PROMPT, 
-  GENERATE_FILES_PROMPT 
+import {
+  FETCH_REPO_PROMPT,
+  CONTINUE_ANALYSIS_PROMPT,
+  GENERATE_FILES_PROMPT
 } from '@/lib/prompts';
+import RepoSummary from '@/components/RepoSummary';
+import { MagnifyingGlassIcon, CogIcon } from '@heroicons/react/24/outline';
 
 interface AnalysisScores {
   overall: number;
@@ -37,6 +39,32 @@ interface GeneratedFile {
   content: string;
 }
 
+interface RepoSummaryData {
+  purpose: string;
+  category: string;
+  techStack: {
+    framework?: string;
+    language: string;
+    database?: string;
+    deployment?: string;
+    aiTools?: string[];
+    otherTools?: string[];
+  };
+  architecture: {
+    pattern: string;
+    components: string[];
+    dataFlow: string;
+  };
+  keyFeatures: string[];
+  codeQuality: {
+    hasTypes: boolean;
+    hasTests: boolean;
+    patterns: string[];
+  };
+  narrative: string;
+  filesAnalyzed?: string[];
+}
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [repoUrl, setRepoUrl] = useState('');
@@ -48,6 +76,9 @@ export default function Home() {
   const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
   const [repoData, setRepoData] = useState<RepoData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<RepoSummaryData | null>(null);
+  const [filesAnalyzedCount, setFilesAnalyzedCount] = useState<number>(0);
+  const [isDeepAnalyzing, setIsDeepAnalyzing] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -104,6 +135,12 @@ export default function Home() {
               setAnalysisComplete(true);
             }
 
+            if (toolName === 'summarizeRepo' && result.success) {
+              // Set summary from summarizeRepo tool
+              setSummary(result.summary);
+              setFilesAnalyzedCount(result.filesAnalyzedCount || 0);
+            }
+
             if (
               ['generateReadme', 'generateGitignore', 'generateLicense', 'generateContributing', 'generateApiDocs'].includes(toolName) &&
               result.success
@@ -136,6 +173,8 @@ export default function Home() {
     setGeneratedFiles([]);
     setSelectedActions([]);
     setRepoData(null);
+    setSummary(null);
+    setFilesAnalyzedCount(0);
     setMessages([]);
 
     await append({
@@ -163,6 +202,8 @@ export default function Home() {
     setSelectedActions([]);
     setRepoData(null);
     setMessages([]);
+    setSummary(null);
+    setFilesAnalyzedCount(0);
   };
 
   const downloadFiles = async () => {
@@ -175,9 +216,46 @@ export default function Home() {
     saveAs(blob, `${repoData?.repo || 'generated'}-files.zip`);
   };
 
+  const triggerDeepAnalysis = async () => {
+    if (!repoData) return;
+
+    setIsDeepAnalyzing(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/deep-analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          owner: repoData.owner,
+          repo: repoData.repo,
+          files: repoData.files,
+          metadata: repoData.metadata,
+          keyFilesContent: repoData.keyFilesContent,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to analyze repository');
+      }
+
+      if (data.success) {
+        setSummary(data.summary);
+        setFilesAnalyzedCount(data.filesAnalyzedCount || 0);
+      }
+    } catch (err) {
+      console.error('Deep analysis error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to perform deep analysis');
+    } finally {
+      setIsDeepAnalyzing(false);
+    }
+  };
+
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#21b01c';
-    if (score >= 60) return '#1a8d17';
+    if (score >= 80) return '#4a9617';
+    if (score >= 60) return '#3d7d13';
     if (score >= 40) return '#f59e0b';
     return '#ef4444';
   };
@@ -187,7 +265,7 @@ export default function Home() {
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Header */}
         <header className={`flex items-center justify-between mb-10 ${mounted ? 'animate-fade-up' : 'opacity-0'}`}>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--accent-cyan)' }}>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--accent-primary)' }}>
             REPO.SCAN
           </h1>
           <div className="status-badge">
@@ -201,7 +279,7 @@ export default function Home() {
           <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
             <div className="stat-card">
               <p className="stat-label">Health Score</p>
-              <p className="stat-value" style={{ color: 'var(--accent-cyan)' }}>{scores.overall}</p>
+              <p className="stat-value" style={{ color: 'var(--accent-primary)' }}>{scores.overall}</p>
             </div>
             <div className="stat-card">
               <p className="stat-label">Documentation</p>
@@ -213,15 +291,15 @@ export default function Home() {
             </div>
             <div className="stat-card">
               <p className="stat-label">Issues Found</p>
-              <p className="stat-value" style={{ color: issues.length > 0 ? 'var(--status-warning)' : 'var(--accent-cyan)' }}>
+              <p className="stat-value" style={{ color: issues.length > 0 ? 'var(--status-warning)' : 'var(--accent-primary)' }}>
                 {issues.length}
               </p>
             </div>
           </div>
         )}
 
-        {/* Search Input */}
-        <div className={`dark-card rounded-xl p-5 mb-6 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
+        {/* Search Input - Glassmorphism */}
+        <div className={`glass-card rounded-xl p-5 mb-6 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
           <div className="flex gap-3">
             <div className="relative flex-1">
               <svg 
@@ -264,7 +342,7 @@ export default function Home() {
               onClick={resetAnalysis} 
               className="mt-3 text-sm transition-colors"
               style={{ color: 'var(--text-muted)' }}
-              onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+              onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
               onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
             >
               ← New analysis
@@ -305,7 +383,7 @@ export default function Home() {
                   className="absolute inset-0 w-16 h-16 rounded-full animate-spin"
                   style={{ 
                     border: '2px solid transparent',
-                    borderTopColor: 'var(--accent-cyan)',
+                    borderTopColor: 'var(--accent-primary)',
                   }} 
                 />
               </div>
@@ -325,7 +403,7 @@ export default function Home() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <svg className="w-6 h-6" style={{ color: 'var(--accent-cyan)' }} fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} fill="currentColor" viewBox="0 0 24 24">
                     <path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" clipRule="evenodd" />
                   </svg>
                   <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -350,7 +428,7 @@ export default function Home() {
 
             <div className="flex gap-6 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full" style={{ background: 'var(--accent-cyan)' }} />
+                <span className="w-3 h-3 rounded-full" style={{ background: 'var(--accent-primary)' }} />
                 <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {repoData.metadata.language || 'Unknown'}
                 </span>
@@ -389,6 +467,124 @@ export default function Home() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Deep Analysis Button - HERO ELEMENT with glassmorphism */}
+        {analysisComplete && !summary && repoData && (
+          <div
+            className={`glass-card rounded-xl p-8 mb-6 relative overflow-hidden ${mounted ? 'animate-fade-up' : 'opacity-0'}`}
+          >
+            {/* Decorative gradient orbs */}
+            <div
+              className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-10 blur-3xl"
+              style={{ background: 'var(--accent-primary)' }}
+            />
+            <div
+              className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full opacity-10 blur-3xl"
+              style={{ background: 'var(--accent-primary)' }}
+            />
+
+            {/* Content */}
+            <div className="relative z-10">
+              <div className="flex items-start gap-4 mb-6">
+                <div
+                  className="p-3 rounded-xl flex-shrink-0"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(74, 150, 23, 0.2)',
+                  }}
+                >
+                  <span className="text-3xl">🤖</span>
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className="text-xl font-bold mb-2"
+                    style={{
+                      lineHeight: '1.3',
+                      color: 'var(--accent-primary)',
+                    }}
+                  >
+                    AI-Powered Deep Code Analysis
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    Unlock intelligent insights by reading and analyzing{' '}
+                    <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>
+                      {repoData.files.length} files
+                    </span>
+                    {' '}from the actual source code
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={triggerDeepAnalysis}
+                disabled={isDeepAnalyzing}
+                className="w-full px-6 py-4 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg relative group"
+                style={{
+                  background: isDeepAnalyzing
+                    ? 'var(--border-color)'
+                    : 'linear-gradient(135deg, rgba(74, 150, 23, 0.2), rgba(111, 184, 36, 0.3))',
+                  border: isDeepAnalyzing ? 'none' : '1px solid rgba(74, 150, 23, 0.4)',
+                  cursor: isDeepAnalyzing ? 'not-allowed' : 'pointer',
+                  opacity: isDeepAnalyzing ? 0.6 : 1,
+                  boxShadow: isDeepAnalyzing
+                    ? 'none'
+                    : '0 8px 24px rgba(74, 150, 23, 0.25)',
+                  backdropFilter: 'blur(10px)',
+                }}
+                onMouseOver={(e) => {
+                  if (!isDeepAnalyzing) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(74, 150, 23, 0.3), rgba(111, 184, 36, 0.4))';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(74, 150, 23, 0.35)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!isDeepAnalyzing) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(74, 150, 23, 0.2), rgba(111, 184, 36, 0.3))';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(74, 150, 23, 0.25)';
+                  }
+                }}
+              >
+                {isDeepAnalyzing ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <CogIcon className="w-5 h-5 animate-spin" />
+                    <span className="text-base">
+                      Analyzing source code...
+                    </span>
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                    <span className="text-base">Start Deep Analysis</span>
+                    <span className="text-lg group-hover:translate-x-1 transition-transform duration-300">→</span>
+                  </span>
+                )}
+              </button>
+
+              {/* Features list */}
+              <div className="mt-5 flex items-center justify-center gap-6 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <div className="flex items-center gap-1.5">
+                  <span style={{ color: 'var(--accent-primary)' }}>✓</span>
+                  <span>Smart file selection</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span style={{ color: 'var(--accent-primary)' }}>✓</span>
+                  <span>Architecture analysis</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span style={{ color: 'var(--accent-primary)' }}>✓</span>
+                  <span>Pattern detection</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI-Powered Summary Card */}
+        {summary && (
+          <RepoSummary summary={summary} filesAnalyzedCount={filesAnalyzedCount} />
         )}
 
         {/* Health Score Card */}
@@ -470,7 +666,7 @@ export default function Home() {
                 <div className="space-y-2">
                   {recommendations.map((rec, i) => (
                     <div key={i} className="issue-item">
-                      <span style={{ color: 'var(--accent-cyan)' }}>→</span>
+                      <span style={{ color: 'var(--accent-primary)' }}>→</span>
                       <span>{rec}</span>
                     </div>
                   ))}
@@ -544,7 +740,7 @@ export default function Home() {
                   <summary className="file-header">
                     <svg 
                       className="w-4 h-4 transition-transform group-open:rotate-90" 
-                      style={{ color: 'var(--accent-cyan)' }}
+                      style={{ color: 'var(--accent-primary)' }}
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
