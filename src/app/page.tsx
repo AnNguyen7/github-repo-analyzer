@@ -8,7 +8,25 @@ import {
   GENERATE_FILES_PROMPT
 } from '@/lib/prompts';
 import RepoSummary from '@/components/RepoSummary';
-import { MagnifyingGlassIcon, CogIcon } from '@heroicons/react/24/outline';
+import {
+  MagnifyingGlassIcon,
+  CogIcon,
+  DocumentTextIcon,
+  ScaleIcon,
+  HandRaisedIcon,
+  BookOpenIcon,
+  CpuChipIcon,
+  ChartBarIcon,
+  SparklesIcon,
+  BoltIcon,
+  CodeBracketIcon,
+  ArrowPathIcon,
+  CheckBadgeIcon,
+  WindowIcon,
+  ShieldCheckIcon,
+  PaintBrushIcon,
+  DocumentCheckIcon
+} from '@heroicons/react/24/outline';
 
 interface AnalysisScores {
   overall: number;
@@ -274,30 +292,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Stats Row - Only show when we have data */}
-        {scores && (
-          <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
-            <div className="stat-card">
-              <p className="stat-label">Health Score</p>
-              <p className="stat-value" style={{ color: 'var(--accent-primary)' }}>{scores.overall}</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-label">Documentation</p>
-              <p className="stat-value">{scores.documentation}%</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-label">Structure</p>
-              <p className="stat-value">{scores.structure}%</p>
-            </div>
-            <div className="stat-card">
-              <p className="stat-label">Issues Found</p>
-              <p className="stat-value" style={{ color: issues.length > 0 ? 'var(--status-warning)' : 'var(--accent-primary)' }}>
-                {issues.length}
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Search Input - Glassmorphism */}
         <div className={`glass-card rounded-xl p-5 mb-6 ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
           <div className="flex gap-3">
@@ -325,7 +319,7 @@ export default function Home() {
             <button
               onClick={handleAnalyze}
               disabled={isLoading || !repoUrl}
-              className="btn-primary flex items-center gap-2"
+              className="btn-glass flex items-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -338,9 +332,9 @@ export default function Home() {
             </button>
           </div>
           {analysisComplete && (
-            <button 
-              onClick={resetAnalysis} 
-              className="mt-3 text-sm transition-colors"
+            <button
+              onClick={resetAnalysis}
+              className="mt-3 text-sm transition-colors cursor-pointer"
               style={{ color: 'var(--text-muted)' }}
               onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
               onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
@@ -349,6 +343,192 @@ export default function Home() {
             </button>
           )}
         </div>
+
+        {/* Landing Page Content - Show when no analysis */}
+        {!analysisComplete && !isLoading && !repoData && (
+          <div className="space-y-12 mb-12">
+            {/* How It Works */}
+            <section className={`${mounted ? 'animate-fade-up delay-200' : 'opacity-0'}`}>
+              <h2 className="text-2xl font-bold text-center mb-8" style={{ color: 'var(--text-primary)' }}>
+                How It Works
+              </h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                {[
+                  {
+                    step: '1',
+                    icon: MagnifyingGlassIcon,
+                    title: 'Analyze',
+                    description: 'Enter any GitHub repository URL. Agent fetches structure, files, and metadata.'
+                  },
+                  {
+                    step: '2',
+                    icon: ChartBarIcon,
+                    title: 'Evaluate',
+                    description: 'AI calculates health scores, identifies missing files, and detects issues.'
+                  },
+                  {
+                    step: '3',
+                    icon: SparklesIcon,
+                    title: 'Generate',
+                    description: 'Create professional documentation tailored to your specific project.'
+                  }
+                ].map((item, i) => (
+                  <div key={i} className="dark-card rounded-xl p-6 text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4"
+                      style={{ background: 'rgba(90, 191, 27, 0.1)', border: '2px solid var(--accent-primary)' }}>
+                      <item.icon className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+                    </div>
+                    <div className="text-xs font-bold mb-2" style={{ color: 'var(--text-muted)' }}>
+                      STEP {item.step}
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                      {item.title}
+                    </h3>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Key Features */}
+            <section className={`${mounted ? 'animate-fade-up delay-300' : 'opacity-0'}`}>
+              <h2 className="text-2xl font-bold text-center mb-8" style={{ color: 'var(--text-primary)' }}>
+                AI-Powered Features
+              </h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                {[
+                  {
+                    icon: CheckBadgeIcon,
+                    title: 'Health Scoring',
+                    description: 'Get 0-100 scores for documentation quality and project structure'
+                  },
+                  {
+                    icon: BoltIcon,
+                    title: 'Smart Generation',
+                    description: 'Create README, LICENSE, CONTRIBUTING files specific to your project'
+                  },
+                  {
+                    icon: CodeBracketIcon,
+                    title: 'Deep Code Analysis',
+                    description: 'AI reads your source code and generates intelligent summaries'
+                  },
+                  {
+                    icon: ArrowPathIcon,
+                    title: 'Multi-Tool AI Agent',
+                    description: 'Specialized tools orchestrated by Gemini AI for optimal results'
+                  }
+                ].map((item, i) => (
+                  <div key={i} className="dark-card rounded-xl p-5 flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ background: 'rgba(90, 191, 27, 0.1)' }}>
+                        <item.icon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+                        {item.title}
+                      </h3>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* AI Agent Architecture */}
+            <section className={`${mounted ? 'animate-fade-up delay-400' : 'opacity-0'}`}>
+              <h2 className="text-2xl font-bold text-center mb-8" style={{ color: 'var(--text-primary)' }}>
+                AI Agent Architecture
+              </h2>
+              <div className="dark-card rounded-xl p-8">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  {/* Brain */}
+                  <div className="flex-1 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-3"
+                      style={{ background: 'rgba(90, 191, 27, 0.15)', border: '2px solid var(--accent-primary)' }}>
+                      <CpuChipIcon className="w-8 h-8" style={{ color: 'var(--accent-primary)' }} />
+                    </div>
+                    <h3 className="font-bold mb-1" style={{ color: 'var(--accent-primary)' }}>Brain</h3>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Gemini 2.5 Flash</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Decides which tools to call</p>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="hidden md:block" style={{ color: 'var(--accent-primary)' }}>
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </div>
+
+                  {/* Orchestrator */}
+                  <div className="flex-1 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-3"
+                      style={{ background: 'rgba(90, 191, 27, 0.15)', border: '2px solid var(--accent-primary)' }}>
+                      <ArrowPathIcon className="w-8 h-8" style={{ color: 'var(--accent-primary)' }} />
+                    </div>
+                    <h3 className="font-bold mb-1" style={{ color: 'var(--accent-primary)' }}>Orchestrator</h3>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Vercel AI SDK</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Connects LLM to tools</p>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="hidden md:block" style={{ color: 'var(--accent-primary)' }}>
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </div>
+
+                  {/* Actors */}
+                  <div className="flex-1 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-3"
+                      style={{ background: 'rgba(90, 191, 27, 0.15)', border: '2px solid var(--accent-primary)' }}>
+                      <BoltIcon className="w-8 h-8" style={{ color: 'var(--accent-primary)' }} />
+                    </div>
+                    <h3 className="font-bold mb-1" style={{ color: 'var(--accent-primary)' }}>Actors</h3>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Multi-Tool Suite</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Execute real operations</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Tech Stack */}
+            <section className={`${mounted ? 'animate-fade-up delay-500' : 'opacity-0'}`}>
+              <h2 className="text-2xl font-bold text-center mb-8" style={{ color: 'var(--text-primary)' }}>
+                Built With Modern Tech
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { name: 'Next.js 16', type: 'Framework', icon: WindowIcon },
+                  { name: 'Gemini 2.5', type: 'LLM', icon: SparklesIcon },
+                  { name: 'TypeScript 5', type: 'Language', icon: CodeBracketIcon },
+                  { name: 'Vercel AI SDK', type: 'AI Tools', icon: BoltIcon },
+                  { name: 'Tailwind CSS 4', type: 'Styling', icon: PaintBrushIcon },
+                  { name: 'Octokit', type: 'GitHub API', icon: CogIcon },
+                  { name: 'Zod', type: 'Validation', icon: ShieldCheckIcon },
+                  { name: 'Poppins + Open Sans', type: 'Typography', icon: DocumentCheckIcon }
+                ].map((tech, i) => (
+                  <div key={i} className="dark-card rounded-lg p-4 text-center">
+                    <div className="flex justify-center mb-2">
+                      <tech.icon className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+                    </div>
+                    <p className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                      {tech.name}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {tech.type}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
 
         {/* Error Display */}
         {error && (
@@ -362,9 +542,9 @@ export default function Home() {
                 <p style={{ color: '#ef4444' }} className="font-medium">Error</p>
                 <p style={{ color: 'var(--text-secondary)' }} className="text-sm">{error}</p>
               </div>
-              <button 
-                onClick={() => setError(null)} 
-                className="ml-auto"
+              <button
+                onClick={() => setError(null)}
+                className="ml-auto cursor-pointer"
                 style={{ color: 'var(--text-muted)' }}
               >
                 ✕
@@ -491,10 +671,10 @@ export default function Home() {
                   className="p-3 rounded-xl flex-shrink-0"
                   style={{
                     background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(74, 150, 23, 0.2)',
+                    border: '1px solid rgba(90, 191, 27, 0.2)',
                   }}
                 >
-                  <span className="text-3xl">🤖</span>
+                  <CpuChipIcon className="w-8 h-8" style={{ color: 'var(--accent-primary)' }} />
                 </div>
                 <div className="flex-1">
                   <h3
@@ -523,27 +703,27 @@ export default function Home() {
                 style={{
                   background: isDeepAnalyzing
                     ? 'var(--border-color)'
-                    : 'linear-gradient(135deg, rgba(74, 150, 23, 0.2), rgba(111, 184, 36, 0.3))',
-                  border: isDeepAnalyzing ? 'none' : '1px solid rgba(74, 150, 23, 0.4)',
+                    : 'linear-gradient(135deg, rgba(90, 191, 27, 0.2), rgba(125, 209, 46, 0.3))',
+                  border: isDeepAnalyzing ? 'none' : '1px solid rgba(90, 191, 27, 0.4)',
                   cursor: isDeepAnalyzing ? 'not-allowed' : 'pointer',
                   opacity: isDeepAnalyzing ? 0.6 : 1,
                   boxShadow: isDeepAnalyzing
                     ? 'none'
-                    : '0 8px 24px rgba(74, 150, 23, 0.25)',
+                    : '0 8px 24px rgba(90, 191, 27, 0.25)',
                   backdropFilter: 'blur(10px)',
                 }}
                 onMouseOver={(e) => {
                   if (!isDeepAnalyzing) {
                     e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(74, 150, 23, 0.3), rgba(111, 184, 36, 0.4))';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(74, 150, 23, 0.35)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(90, 191, 27, 0.3), rgba(125, 209, 46, 0.4))';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(90, 191, 27, 0.35)';
                   }
                 }}
                 onMouseOut={(e) => {
                   if (!isDeepAnalyzing) {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(74, 150, 23, 0.2), rgba(111, 184, 36, 0.3))';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(74, 150, 23, 0.25)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(90, 191, 27, 0.2), rgba(125, 209, 46, 0.3))';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(90, 191, 27, 0.25)';
                   }
                 }}
               >
@@ -684,10 +864,10 @@ export default function Home() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
               {[
-                { id: 'readme', label: 'README.md', icon: '📄' },
-                { id: 'license', label: 'LICENSE', icon: '⚖️' },
-                { id: 'contributing', label: 'CONTRIBUTING.md', icon: '🤝' },
-                { id: 'api-docs', label: 'API Docs', icon: '📚' },
+                { id: 'readme', label: 'README.md', Icon: DocumentTextIcon },
+                { id: 'license', label: 'LICENSE', Icon: ScaleIcon },
+                { id: 'contributing', label: 'CONTRIBUTING.md', Icon: HandRaisedIcon },
+                { id: 'api-docs', label: 'API Docs', Icon: BookOpenIcon },
               ].map((action) => (
                 <label
                   key={action.id}
@@ -705,7 +885,7 @@ export default function Home() {
                     }}
                     className="sr-only"
                   />
-                  <span>{action.icon}</span>
+                  <action.Icon className="w-5 h-5" />
                   <span className="font-medium">{action.label}</span>
                 </label>
               ))}
