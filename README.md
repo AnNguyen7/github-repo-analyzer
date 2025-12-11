@@ -96,36 +96,6 @@ The agent has 8 specialized tools at its disposal:
 | \`generateApiDocs\` | Documents functions, classes, and API endpoints |
 | \`createGithubIssues\` | Suggests GitHub issues for identified improvements |
 
-## Project Structure
-
-\`\`\`
-github-repo-analyzer/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx              # Main UI with chat interface
-│   │   ├── globals.css           # Tailwind + custom animations
-│   │   └── api/analyze/route.ts  # AI SDK streaming endpoint
-│   ├── components/
-│   │   ├── AnalysisResults.tsx   # Health score & issues display
-│   │   └── GeneratedFiles.tsx    # File viewer with download
-│   └── lib/
-│       ├── agent.ts              # Tool definitions & configuration
-│       ├── tools/                # 8 agent tool implementations
-│       │   ├── fetchRepo.ts
-│       │   ├── analyzeStructure.ts
-│       │   ├── generateReadme.ts
-│       │   ├── generateGitignore.ts
-│       │   ├── generateLicense.ts
-│       │   ├── generateContributing.ts
-│       │   ├── generateApiDocs.ts
-│       │   └── createGithubIssues.ts
-│       ├── github.ts             # GitHub API utilities
-│       └── prompts.ts            # System prompts for agent
-├── .env.example
-├── package.json
-└── README.md
-\`\`\`
-
 ## Screenshots
 
 <p align="center">
